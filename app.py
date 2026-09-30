@@ -94,15 +94,20 @@ def fmt(dt):
     return dt.strftime("%a %d %b %Y, %H:%M")
 
 
-def make_ics(cfg, start, uid_seed):
+def _ics_escape(text):
+    return text.replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\n", "\\n")
+
+
+def make_ics(cfg, start, uid_seed, summary=None, description=None):
     """Minimal iCalendar event (floating local time, so it lands at the same wall-clock time)."""
     end = start + timedelta(minutes=cfg.get("duration_minutes", 45))
     f = "%Y%m%dT%H%M%S"
     lines = [
-        "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//booking//EN", "BEGIN:VEVENT",
+        "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//booking//EN", "METHOD:PUBLISH", "BEGIN:VEVENT",
         f"UID:{uid_seed}@booking", f"DTSTAMP:{datetime.utcnow().strftime(f)}Z",
         f"DTSTART:{start.strftime(f)}", f"DTEND:{end.strftime(f)}",
-        f"SUMMARY:{cfg['title']}", f"LOCATION:{cfg.get('location', '')}",
+        f"SUMMARY:{_ics_escape(summary or cfg['title'])}", f"LOCATION:{_ics_escape(cfg.get('location', ''))}",
+        f"DESCRIPTION:{_ics_escape(description or '')}",
         "BEGIN:VALARM", "TRIGGER:-PT1H", "ACTION:DISPLAY", "DESCRIPTION:Reminder", "END:VALARM",
         "END:VEVENT", "END:VCALENDAR",
     ]
@@ -204,10 +209,14 @@ if submitted:
         when = fmt(chosen["start"])
         tag = cfg.get("study_tag")
         ics = make_ics(cfg, chosen["start"], f"{slot}-{email}")
+        organiser_ics = make_ics(cfg, chosen["start"], f"org-{slot}-{email}",
+                                 summary=f"{cfg['title']} – {name}",
+                                 description=f"Participant: {name}\nEmail: {email}")
         ok, info = send_email(
             f"New booking: {name} – {when}",
-            f"Study: {tag}\nName: {name}\nEmail: {email}\nSlot: {when}\n",
-            reply_to=email, tag=tag,
+            f"Study: {tag}\nName: {name}\nEmail: {email}\nSlot: {when}\n\n"
+            "Open the attached session.ics to add this session to your calendar.\n",
+            reply_to=email, tag=tag, ics=organiser_ics,
         )
         emailed = False
         if cfg.get("confirm_participant", True) and ok:
