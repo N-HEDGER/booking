@@ -1,0 +1,19 @@
+title: "Cerebellum Study – Session Booking"
+study_tag: "cerebellum_study"   # goes in the subject of your notification emails, for filtering
+duration_minutes: 90
+timezone: "Europe/London"
+description: |
+  Please pick one session below. You'll be asked for your name and email.
+  Each session takes about 90 minutes.
+location: "MR unit, Harry Pitt Building"
+
+# Participants per slot (1 = each slot can be booked by one person only)
+capacity: 1
+
+slots:
+  - "2026-10-12 10:00"
+  - "2026-10-12 11:00"
+  - "2026-10-12 14:00"
+  - "2026-10-13 09:30"
+  - "2026-10-13 13:00"
+  - "2026-10-14 10:00"

@@ -1,0 +1,4 @@
+.streamlit/secrets.toml
+bookings.csv
+__pycache__/
+.pixi/
